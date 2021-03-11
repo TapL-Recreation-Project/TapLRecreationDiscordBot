@@ -1,5 +1,6 @@
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -28,35 +29,14 @@ public class Main {
         }
 
     }
-    public static int getDownloads() {
+    public static int getDownloads(int[] spigotIDs, int[] forgeIDs) {
         int downloads = 0;
-        int[] IDs = {89567,89595,89470,89434,89441,88965,88219,89265,88887
-        //,89732
-        };
-        for (int ID : IDs) {
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder()
-                    .url("https://api.spiget.org/v2/resources/" + ID)
-                    .build();
-            Response response;
-            try {
-                response = client.newCall(request).execute();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return 0;
-            }
-            String stringResponse;
-            try {
-                stringResponse = response.body().string();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return 0;
-            }
-
-            Map jsonJavaRootObject = new Gson().fromJson(stringResponse, Map.class);
-
-            downloads += (double) jsonJavaRootObject.get("downloads");
-
+        
+        for (int ID : spigotIDs) {
+           downloads += getDownload("https://api.spiget.org/v2/resources/" + ID, false);
+        }
+        for (int ID : forgeIDs) {
+          downloads += getDownload("https://api.cfwidget.com/" + ID, true);
         }
         return downloads;
     }
@@ -93,7 +73,7 @@ public class Main {
         System.out.println("Updated members (" + members + ")");
     }
     public static void updateDownloadCount(DiscordApi api) {
-        int downloads = getDownloads();
+        int downloads = getDownloads(new int[]{89567,89595,89470,89434,89441,88965,88219,89265,88887,89732}, new int[]{455364});
         api.getServerById(811844634090537040l).get().getVoiceChannelById(816056814343815198l).get().updateName("Total downloads: " + downloads);
         System.out.println("Updated downloads (" + downloads + ")");
     }
@@ -102,6 +82,41 @@ public class Main {
         int servers = getServerCount();
         api.getServerById(811844634090537040l).get().getVoiceChannelById(816113904513187841l).get().updateName("Servers using: " + servers);
         System.out.println("Updated server count (" + servers + ")");
+    }
+
+    public static int getDownload(String url, boolean total) {
+        System.out.println(url);
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+        Response response;
+        try {
+            response = client.newCall(request).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0;
+        }
+        String stringResponse;
+        try {
+            stringResponse = response.body().string();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0;
+        }
+
+        
+
+        int downloads = 0;
+        if (total) {
+          JsonObject object = new Gson().fromJson(stringResponse, JsonObject.class);
+          JsonObject downloadObject = object.getAsJsonObject("downloads");
+          downloads += downloadObject.get("total").getAsDouble();
+        } else {
+          Map jsonJavaRootObject = new Gson().fromJson(stringResponse, Map.class);
+          downloads += (double) jsonJavaRootObject.get("downloads");
+        }
+        return downloads;
     }
 
 }
