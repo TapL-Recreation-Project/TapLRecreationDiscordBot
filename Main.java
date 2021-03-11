@@ -68,7 +68,7 @@ public class Main {
         return onlineservers;
     }
     public static void updateMemberCount(DiscordApi api) {
-        int members = api.getServerById(811844634090537040l).get().getMemberCount() - 3;
+        int members = api.getServerById(811844634090537040l).get().getMemberCount();
         api.getServerById(811844634090537040l).get().getVoiceChannelById(815771540880752660l).get().updateName("Members: " + members);
         System.out.println("Updated members (" + members + ")");
     }
